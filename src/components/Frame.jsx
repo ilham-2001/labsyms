@@ -15,7 +15,7 @@ const Frame = function () {
   };
 
   const client = mqtt.connect(brokerUrl); // create a client
-
+  
   useEffect(() => {
     // Connect to the MQTT broker
     client.on('connect', () => {
@@ -32,7 +32,7 @@ const Frame = function () {
     return () => {
       client.end(); // Close the MQTT connection
     };
-  }, [client, topic]);
+  }, []);
 
   return (
     <div>
