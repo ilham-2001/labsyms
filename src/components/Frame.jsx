@@ -3,9 +3,8 @@ import { useRef, useEffect, useState } from 'react';
 import Webcam from 'react-webcam';
 
 const brokerUrl = 'ws://127.0.0.1:9001/mqtt';
-const topic = '/labsyms/image-pos';
+const topic = '/labsyms/image';
 
-const WebcamComponent = () => <Webcam />;
 const videoConstraints = {
   width: 320,
   height: 320,
@@ -13,7 +12,7 @@ const videoConstraints = {
 };
 
 const Frame = function () {
-  const [imageBase64, setImageBase64] = useState(null);
+  const [bbPos, setBBPos] = useState([]);
 
   const client = mqtt.connect(brokerUrl); // create a client
   const webcamRef = useRef(null);
@@ -34,14 +33,21 @@ const Frame = function () {
         videoElement.videoHeight
       );
 
-      captureCanvasContext.strokeStyle = 'red';
-      captureCanvasContext.lineWidth = 2;
-      captureCanvasContext.strokeRect(50, 50, 100, 100); // Sample bounding box
+      console.log(bbPos);
 
-        // Convert the frame data to base64
-        const base64Data = captureCanvas.toDataURL('image/jpeg');
-        // client.publish(topic, base64Data);
+      if (bbPos.length === 4) {
+        captureCanvasContext.strokeStyle = 'green';
+        captureCanvasContext.lineWidth = 2;
+        // captureCanvasContext.strokeRect(bbPos[0]['pos'][0], bbPos['pos'][2], bbPos['pos'][1]-bbPos['pos'][0], bbPos['pos'][3]-bbPos['pos'][2]);
+      }
 
+      // Convert the frame data to base64
+      const base64Data = captureCanvas.toDataURL('image/jpeg');
+      client.publish(topic, base64Data, (err)=> {
+        if (err) {
+          console.log('Error on publishing message', err);
+        }
+      });
       // Add additional canvas drawing or image processing here if needed
       requestAnimationFrame(handleCapture);
     };
@@ -49,26 +55,24 @@ const Frame = function () {
     // Connect to the MQTT broker
     client.on('connect', () => {
       console.log('Connected to MQTT broker');
-      client.subscribe(topic);
       handleCapture();
+      client.subscribe("/labsyms/image-pos");
     });
 
     // Handle incoming messages
     client.on('message', (topic, message) => {
-      setImageBase64(message.toString());
+      setBBPos([JSON.parse(message.toString())]);
     });
 
     client.on('error', (err) => {
       console.error('MQTT client error:', err);
     });
 
-
     captureCanvas.addEventListener('click', (event) => {
       const x = event.clientX;
       const y = event.clientY;
       console.log('Clicked at coordinates (x, y):', x, y);
     });
-
 
     // Cleanup on component unmount
     return () => {
@@ -85,9 +89,8 @@ const Frame = function () {
         width={320}
         screenshotFormat='image/jpeg'
         videoConstraints={videoConstraints}
-        style={{ display: 'hidden' }}
       />
-      <canvas ref={canvasRef} width={400} height={480} />
+      <canvas ref={canvasRef} width={320} height={320} />
     </div>
   );
 };
