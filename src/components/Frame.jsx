@@ -1,77 +1,25 @@
 import * as mqtt from 'mqtt/dist/mqtt.min';
-import { useRef, useEffect, useState } from 'react';
-import Webcam from 'react-webcam';
+import { useEffect, useState } from 'react';
+import { notFound } from '../images/assets';
 
 const brokerUrl = 'ws://127.0.0.1:9001/mqtt';
 const topic = '/labsyms/image';
 
-const videoConstraints = {
-  width: 320,
-  height: 320,
-  facingMode: 'user',
-};
-
 const Frame = function () {
-  const [bbPos, setBBPos] = useState([]);
+  const [imageBase64, setImageBase64] = useState(null);
 
   const client = mqtt.connect(brokerUrl); // create a client
-  const webcamRef = useRef(null);
-  const canvasRef = useRef(null);
 
   useEffect(() => {
-    const captureCanvas = canvasRef.current;
-    const captureCanvasContext = captureCanvas.getContext('2d');
-
-    const handleCapture = () => {
-      const videoElement = webcamRef.current.video;
-
-      captureCanvasContext.drawImage(
-        videoElement,
-        0,
-        0,
-        videoElement.videoWidth,
-        videoElement.videoHeight
-      );
-
-      console.log(bbPos);
-
-      if (bbPos.length === 4) {
-        captureCanvasContext.strokeStyle = 'green';
-        captureCanvasContext.lineWidth = 2;
-        // captureCanvasContext.strokeRect(bbPos[0]['pos'][0], bbPos['pos'][2], bbPos['pos'][1]-bbPos['pos'][0], bbPos['pos'][3]-bbPos['pos'][2]);
-      }
-
-      // Convert the frame data to base64
-      const base64Data = captureCanvas.toDataURL('image/jpeg');
-      client.publish(topic, base64Data, (err)=> {
-        if (err) {
-          console.log('Error on publishing message', err);
-        }
-      });
-      // Add additional canvas drawing or image processing here if needed
-      requestAnimationFrame(handleCapture);
-    };
-
     // Connect to the MQTT broker
     client.on('connect', () => {
-      console.log('Connected to MQTT broker');
-      handleCapture();
-      client.subscribe("/labsyms/image-pos");
+      console.log('Connected to MQTT broker for Frame');
+      client.subscribe(topic);
     });
 
     // Handle incoming messages
     client.on('message', (topic, message) => {
-      setBBPos([JSON.parse(message.toString())]);
-    });
-
-    client.on('error', (err) => {
-      console.error('MQTT client error:', err);
-    });
-
-    captureCanvas.addEventListener('click', (event) => {
-      const x = event.clientX;
-      const y = event.clientY;
-      console.log('Clicked at coordinates (x, y):', x, y);
+      setImageBase64(message.toString());
     });
 
     // Cleanup on component unmount
@@ -82,15 +30,24 @@ const Frame = function () {
 
   return (
     <div>
-      <Webcam
-        audio={false}
-        height={320}
-        ref={webcamRef}
-        width={320}
-        screenshotFormat='image/jpeg'
-        videoConstraints={videoConstraints}
-      />
-      <canvas ref={canvasRef} width={320} height={320} />
+      {imageBase64 ? (
+        <img
+          src={`data:image/jpeg;base64,${imageBase64}`}
+          alt='not Found'
+          style={{
+            width: 'auto',
+            height: 'auto',
+            maxWidth: '500px',
+            maxHeight: '500px',
+          }}
+        />
+      ) : (
+        <img
+          className='max-w-[500px] max-h-[500px] w-1/2'
+          src={notFound}
+          alt='No way'
+        />
+      )}
     </div>
   );
 };

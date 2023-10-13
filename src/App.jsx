@@ -1,10 +1,11 @@
-import Frame from './components/Frame';
+import Main from './pages/Main'
+import Navigation from './components/Navigation';
 
 function App() {
   return (
-    <div className='App'>
-      <h1 className='text-3xl font-bold underline'>Hello world!</h1>
-      <Frame />
+    <div>
+      <Navigation />
+      <Main />
     </div>
   );
 }
