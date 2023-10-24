@@ -1,19 +1,19 @@
 import * as mqtt from 'mqtt/dist/mqtt.min';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const brokerUrl = 'ws://127.0.0.1:9001/mqtt';
 
 const Card = function ({ cardItems }) {
   return (
-    <div className='container'>
-      <div className='flex flex-row'>
+    <div className='container my-auto'>
+      <div className='flex flex-wrap gap-4'>
         {cardItems.map((it) => (
           <CardItem
-          key={it.id}
-          name={it.name}
-          altext={it.alt}
-          illustration={it.illustration}
-          topic={it.topic}
+            key={it.id}
+            name={it.name}
+            altext={it.alt}
+            illustration={it.illustration}
+            topic={it.topic}
           />
         ))}
       </div>
@@ -25,6 +25,7 @@ export default Card;
 
 const CardItem = function ({ name, altext, illustration, topic }) {
   const client = mqtt.connect(brokerUrl);
+  const [isAvail, setAvail] = useState('red')
 
   useEffect(() => {
     client.on('connect', () => {
@@ -35,14 +36,22 @@ const CardItem = function ({ name, altext, illustration, topic }) {
     // Handle incoming messages
     client.on('message', (topic, message) => {
       // update data on detected check
+      if (message.toString() === 'True') {
+        setAvail('green');
+      } else {
+        setAvail('red');
+      }
     });
 
     return () => {
       client.end();
     };
-  });
+  }, []);
   return (
-    <div className='flex-1 flex flex-col items-center justify-center gap-5 mx-5 rounded-xl' style={{backgroundColor: 'red'}}>
+    <div
+      className='flex flex-col basis-[330px] items-center justify-center p-1 mx-5 rounded-xl'
+      style={{ backgroundColor: isAvail, color: '#FFFFFF'}}
+    >
       <p>{name}</p>
       <img className='w-20' src={illustration} alt={altext} />
       <p></p>

@@ -29,7 +29,7 @@ const Frame = function () {
   }, []);
 
   return (
-    <div>
+    <div className='container w-1/3'>
       {imageBase64 ? (
         <img
           src={`data:image/jpeg;base64,${imageBase64}`}
@@ -43,7 +43,7 @@ const Frame = function () {
         />
       ) : (
         <img
-          className='max-w-[500px] max-h-[500px] w-1/2'
+          className='w-full'
           src={notFound}
           alt='No way'
         />
