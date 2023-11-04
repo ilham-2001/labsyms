@@ -43,7 +43,7 @@ const Frame = function () {
         />
       ) : (
         <img
-          className='w-full'
+          className='w-full h-80'
           src={notFound}
           alt='No way'
         />
