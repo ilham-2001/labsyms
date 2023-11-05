@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { notFound } from '../images/assets';
 
 const brokerUrl = 'ws://127.0.0.1:9001/mqtt';
-const topic = '/labsyms/image';
+const topic = '/labsyms/image-preview';
 
-const Frame = function () {
+const DetectedPreview = function () {
   const [imageBase64, setImageBase64] = useState(null);
 
   const client = mqtt.connect(brokerUrl); // create a client
@@ -13,7 +13,7 @@ const Frame = function () {
   useEffect(() => {
     // Connect to the MQTT broker
     client.on('connect', () => {
-      console.log('Connected to MQTT broker for Frame Preview');
+      console.log('Connected to MQTT broker for Frame');
       client.subscribe(topic);
     });
 
@@ -52,4 +52,4 @@ const Frame = function () {
   );
 };
 
-export default Frame;
+export default DetectedPreview;
